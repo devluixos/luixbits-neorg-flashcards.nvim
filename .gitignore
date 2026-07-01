@@ -7,3 +7,6 @@
 .repro/
 coverage/
 tmp/
+PLAN.md
+TODO.md
+*.local.md

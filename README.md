@@ -1,18 +1,38 @@
 # luixbits-neorg-flashcards.nvim
 
-Local flashcards for Neorg notes.
+Local flashcards for Neorg notes in Neovim.
 
-This plugin stores cards as plain `.norg` files, opens a small prompt for new
-cards, and provides an in-editor review popup with tags, score filters, and
-simple 1/2/3 ratings. It does not require Anki, a server, or network sync.
+`luixbits-neorg-flashcards.nvim` keeps language-learning cards in plain `.norg`
+files, then gives you a small prompt for creating cards and a floating review
+UI for studying them. It is intentionally local-first: no Anki, no server, no
+sync account, and no database outside your notes.
 
-## Install
+## Features
 
-With lazy.nvim:
+- Plain-text flashcards stored as Neorg `@flashcard` blocks.
+- Prompt-based card creation with configurable fields.
+- Floating review popup with reveal, next, previous, edit, and quit actions.
+- `1`, `2`, `3` scoring for bad, mid, and good cards.
+- Review all cards, the current file, a tag, or a score bucket.
+- Opt-in Japanese and Chinese presets.
+- Custom schemas for any language or subject.
+- Lazy.nvim and Nix/NVF setup examples.
+
+## Requirements
+
+- Neovim 0.10 or newer.
+- Neorg, if you want normal Neorg editing/rendering for the `.norg` files.
+
+The plugin itself reads and writes plain files. It does not require a running
+Neorg workspace, Anki, SQLite, or external services.
+
+## Installation
+
+### lazy.nvim
 
 ```lua
 {
-  "LuixBits/luixbits-neorg-flashcards.nvim",
+  "devluixos/luixbits-neorg-flashcards.nvim",
   dependencies = {
     "nvim-neorg/neorg",
   },
@@ -29,7 +49,7 @@ With lazy.nvim:
 }
 ```
 
-Use a local checkout while developing:
+### Local Checkout
 
 ```lua
 {
@@ -47,6 +67,72 @@ Use a local checkout while developing:
   end,
 }
 ```
+
+### NVF / Nix
+
+For NVF, package the plugin with `pkgs.vimUtils.buildVimPlugin` and add it to
+`programs.nvf.settings.vim.startPlugins`.
+
+```nix
+{
+  config,
+  pkgs,
+  ...
+}: let
+  neorgFlashcards = pkgs.vimUtils.buildVimPlugin {
+    pname = "luixbits-neorg-flashcards.nvim";
+    version = "0.1.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "devluixos";
+      repo = "luixbits-neorg-flashcards.nvim";
+      rev = "v0.1.0";
+      hash = "sha256-0Sjl3BeDZKmNfVUZxnzgCVvkZ7OSO7HyEIVJQTdKKSo=";
+    };
+  };
+in {
+  programs.nvf.settings.vim = {
+    startPlugins = [
+      neorgFlashcards
+    ];
+
+    luaConfigRC.neorg-flashcards = ''
+      local presets = require("neorg_flashcards.presets")
+
+      require("neorg_flashcards").setup({
+        flashcards_dir = vim.fn.expand("~/notes/flashcards"),
+        default_file = vim.fn.expand("~/notes/flashcards/cards.norg"),
+        default_kind = "japanese",
+        languages = presets.only("japanese"),
+      })
+    '';
+  };
+}
+```
+
+To refresh the hash for a newer tag, prefetch it:
+
+```sh
+nix store prefetch-file --unpack \
+  https://github.com/devluixos/luixbits-neorg-flashcards.nvim/archive/refs/tags/v0.1.0.tar.gz
+```
+
+In a flake-based config, you can also use the repository as a flake input with
+`flake = false` and set `src = inputs.luixbits-neorg-flashcards`.
+
+```nix
+inputs.luixbits-neorg-flashcards = {
+  url = "github:devluixos/luixbits-neorg-flashcards.nvim/v0.1.0";
+  flake = false;
+};
+```
+
+## Quick Start
+
+1. Configure at least one language preset or custom schema.
+2. Run `:NeorgFlashcardOpen` to create or open the configured flashcard file.
+3. Run `:NeorgFlashcardAdd` to add a card.
+4. Run `:NeorgFlashcardReview` to study all cards.
+5. During review, press `1`, `2`, or `3` to save how well you know the card.
 
 ## Commands
 
@@ -97,6 +183,41 @@ reviewed: 2026-07-01
 Only fields marked `required = true` in the language schema are required.
 `score:` and `reviewed:` are maintained by the review UI when you press `1`,
 `2`, or `3`.
+
+## Configuration
+
+Default options:
+
+```lua
+require("neorg_flashcards").setup({
+  flashcards_dir = vim.fn.expand("~/notes/flashcards"),
+  default_file = vim.fn.expand("~/notes/flashcards/cards.norg"),
+  default_kind = nil,
+  languages = {},
+})
+```
+
+`languages` maps a flashcard kind, such as `japanese`, to a schema:
+
+```lua
+{
+  label = "Japanese",
+  front = "japanese",
+  aliases = {
+    japanese = { "word" },
+  },
+  fields = {
+    { key = "japanese", label = "Japanese: ", title = "Japanese", required = true },
+    { key = "reading", label = "Reading: ", title = "Reading", reveal = true },
+    { key = "english", label = "English: ", title = "English", required = true, reveal = true },
+    { key = "notes", label = "Notes: ", title = "Notes", reveal = true },
+    { key = "tags", label = "Tags: ", title = "Tags" },
+  },
+}
+```
+
+Fields with `required = true` must exist before a card can be reviewed. Fields
+with `reveal = true` appear after you reveal the answer.
 
 ## Language Presets
 
@@ -193,7 +314,11 @@ user can validate it.
 A short asciinema-compatible terminal demo is available at
 [`docs/demo.cast`](docs/demo.cast).
 
-Module layout:
+## License
+
+MIT. See [`LICENSE`](LICENSE).
+
+## Module Layout
 
 ```text
 lua/neorg_flashcards/init.lua     public setup, commands, add/open actions

@@ -70,13 +70,13 @@ outside NixOS, and optionally consumed by the local NVF/Nix configuration.
 
 ## Phase 7 - Release Readiness
 
-- [ ] Create a GitHub repo under the LuixBits namespace.
-- [ ] Push the standalone repository.
-- [ ] Add repository topics: `neovim`, `neorg`, `flashcards`, `lua`, `language-learning`.
-- [ ] Add a public `v0.1.0` tag.
+- [x] Create a GitHub repo under the LuixBits namespace.
+- [x] Push the standalone repository.
+- [x] Add repository topics: `neovim`, `neorg`, `flashcards`, `lua`, `language-learning`.
+- [x] Add a public `v0.1.0` tag.
 - [x] Add a release note using `CHANGELOG.md`.
 - [x] Confirm install instructions against a clean Neovim config.
-- [ ] Confirm behavior on Linux and macOS.
+- [x] Confirm behavior on Linux and macOS.
 - [x] Decide whether Windows paths should be supported for the first release.
 
 ## Phase 8 - Local NVF/Nix Integration
@@ -95,4 +95,4 @@ outside NixOS, and optionally consumed by the local NVF/Nix configuration.
 - [x] Reviews are shuffled and support tag and score filters.
 - [x] Scores are saved back to card files.
 - [x] The local NVF/Nix setup uses the standalone plugin as a dependency.
-- [ ] The first public release is tagged and documented.
+- [x] The first public release is tagged and documented.

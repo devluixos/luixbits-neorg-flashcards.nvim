@@ -1,11 +1,30 @@
 # luixbits-neorg-flashcards.nvim
 
+![Creating and reviewing Japanese flashcards](docs/demo/review.gif?raw=true&v=5c58e1c)
+
 Local flashcards for Neorg notes in Neovim.
 
 `luixbits-neorg-flashcards.nvim` keeps language-learning cards in plain `.norg`
 files, then gives you a small prompt for creating cards and a floating review
 UI for studying them. It is intentionally local-first: no Anki, no server, no
 sync account, and no database outside your notes.
+
+## Index
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+- [Review Keys](#review-keys)
+- [Card Format](#card-format)
+- [Configuration](#configuration)
+- [Language Presets](#language-presets)
+- [Suggested Keymaps](#suggested-keymaps)
+- [Development](#development)
+- [Platform Support](#platform-support)
+- [License](#license)
+- [Module Layout](#module-layout)
 
 ## Features
 
@@ -314,17 +333,6 @@ bash scripts/record-real-demo.sh
 The first release targets Linux and macOS. Windows is not a `0.1.0` release
 target; path handling should be treated as best effort there until a Windows
 user can validate it.
-
-## Demo
-
-![Creating and reviewing Japanese flashcards](docs/demo/review.gif)
-
-The demo is a real screen recording captured with `wf-recorder` from an actual
-kitty + Neovim session. The recording workflow lives in
-[`scripts/record-real-demo.sh`](scripts/record-real-demo.sh) and uses the sample
-Japanese cards in [`docs/demo/flashcards/cards.norg`](docs/demo/flashcards/cards.norg).
-It creates cards for `languages` / `言語` and `linux` / `リナックス`, then reviews
-and scores them.
 
 ## License
 

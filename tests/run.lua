@@ -218,6 +218,13 @@ assert_contains(all_text, "all | 1/2", "all command combines chapter files")
 flashcards.close_review()
 
 vim.cmd.edit(vim.fn.fnameescape(chapter_one_path))
+local alias_cards, alias_errors = parser.collect_flashcards({
+  flashcards_dir = collection_alias,
+  languages = collection_config.languages,
+})
+assert_equal(#alias_errors, 0, "symlinked collection has no errors")
+assert_equal(#alias_cards, 2, "symlinked collection deduplicates loaded chapter paths")
+
 vim.cmd("NeorgFlashcardReviewFile")
 local _, file_text = current_popup()
 assert_contains(file_text, "file | 1/1", "file command reviews only the current chapter")

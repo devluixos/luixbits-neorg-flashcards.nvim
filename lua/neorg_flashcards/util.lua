@@ -21,7 +21,7 @@ function M.fname(path)
   return vim.fn.fnameescape(path)
 end
 
-local function normalized_path(path)
+function M.canonical_path(path)
   if M.isempty(path) then
     return ""
   end
@@ -39,14 +39,14 @@ local function without_trailing_slash(path)
 end
 
 function M.loaded_buffer(path)
-  local target = normalized_path(path)
+  local target = M.canonical_path(path)
   if target == "" then
     return nil
   end
 
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     local buffer_path = vim.api.nvim_buf_get_name(bufnr)
-    if vim.api.nvim_buf_is_loaded(bufnr) and normalized_path(buffer_path) == target then
+    if vim.api.nvim_buf_is_loaded(bufnr) and M.canonical_path(buffer_path) == target then
       return bufnr
     end
   end
@@ -55,8 +55,8 @@ function M.loaded_buffer(path)
 end
 
 function M.path_is_within(path, root)
-  path = without_trailing_slash(normalized_path(path))
-  root = without_trailing_slash(normalized_path(root))
+  path = without_trailing_slash(M.canonical_path(path))
+  root = without_trailing_slash(M.canonical_path(root))
 
   if path == "" or root == "" then
     return false
@@ -71,8 +71,8 @@ function M.path_is_within(path, root)
 end
 
 function M.path_label(path, root)
-  path = without_trailing_slash(normalized_path(path))
-  root = without_trailing_slash(normalized_path(root))
+  path = without_trailing_slash(M.canonical_path(path))
+  root = without_trailing_slash(M.canonical_path(root))
 
   if path == "" then
     return "[No Name]"

@@ -101,20 +101,20 @@ function M.flashcard_files(config)
   local seen = {}
 
   for _, path in ipairs(files) do
-    seen[vim.fs.normalize(path)] = true
+    seen[util.canonical_path(path)] = true
   end
 
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     local path = vim.api.nvim_buf_get_name(bufnr)
-    local normalized = vim.fs.normalize(path)
+    local canonical = util.canonical_path(path)
     if
       vim.api.nvim_buf_is_loaded(bufnr)
       and path:match("%.norg$")
       and util.path_is_within(path, config.flashcards_dir)
-      and not seen[normalized]
+      and not seen[canonical]
     then
       table.insert(files, path)
-      seen[normalized] = true
+      seen[canonical] = true
     end
   end
 

@@ -20,7 +20,7 @@ All notable changes to this project will be documented here.
   paths, and global versus popup-local keymaps.
 - Made `NeorgFlashcardOpen` create nested parent directories for `default_file`.
 - Normalized symlinked collection paths so chapter source labels stay relative
-  on macOS and other symlinked roots.
+  and loaded files are not counted twice on macOS or other symlinked roots.
 - Hardened test exit handling and temporary-directory isolation so startup
   errors and concurrent runs cannot report false success.
 

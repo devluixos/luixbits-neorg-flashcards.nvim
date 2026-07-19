@@ -15,6 +15,7 @@ sync account, and no database outside your notes.
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Chapters and Collections](#chapters-and-collections)
 - [Commands](#commands)
 - [Review Keys](#review-keys)
 - [Card Format](#card-format)
@@ -51,7 +52,7 @@ Neorg workspace, Anki, SQLite, or external services.
 
 ```lua
 {
-  "devluixos/luixbits-neorg-flashcards.nvim",
+  "LuixBits/luixbits-neorg-flashcards.nvim",
   dependencies = {
     "nvim-neorg/neorg",
   },
@@ -93,7 +94,7 @@ The repository exposes a flake package and a small NVF module. Add it as a
 flake input:
 
 ```nix
-inputs.luixbits-neorg-flashcards.url = "github:devluixos/luixbits-neorg-flashcards.nvim";
+inputs.luixbits-neorg-flashcards.url = "github:LuixBits/luixbits-neorg-flashcards.nvim";
 ```
 
 Import the module next to your NVF/Home Manager setup:
@@ -163,6 +164,32 @@ in {
 4. Run `:NeorgFlashcardReview` to study all cards.
 5. During review, press `1`, `2`, or `3` to save how well you know the card.
 
+## Chapters and Collections
+
+Use one `.norg` file per chapter and keep those files under `flashcards_dir`:
+
+```text
+flashcards/
+├── chapter-01.norg
+├── chapter-02.norg
+└── course-b/
+    └── chapter-01.norg
+```
+
+Open a chapter with your normal Neovim file picker or `:edit`, then use
+`:NeorgFlashcardAdd` to add to that file and `:NeorgFlashcardReviewFile` to
+study only that chapter. `:NeorgFlashcardReview` recursively combines every
+chapter under `flashcards_dir` into one review session.
+
+Tags are best used for topics that cross chapter boundaries. For example,
+cards in several files can use `tags: grammar difficult`, then
+`:NeorgFlashcardReviewTag grammar` reviews that topic across the collection.
+Tag matching is case-insensitive and accepts one exact whitespace- or
+comma-separated tag at a time.
+
+`:NeorgFlashcardOpen` still opens only `default_file`. Keep that file under
+`flashcards_dir` if it should be included in all-card and filtered reviews.
+
 ## Commands
 
 - `:NeorgFlashcardOpen` opens the configured default file.
@@ -191,7 +218,10 @@ configured.
 
 If the source card file is already open and has unsaved edits, ratings update
 that buffer but do not write it automatically. Save the file normally to persist
-both your edits and the rating.
+both your edits and the rating. Collection reviews read loaded buffers so the
+card shown matches those edits. If a source changes after the review starts,
+rating stops and asks you to restart the review rather than risk changing the
+wrong card.
 
 ## Card Format
 

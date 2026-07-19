@@ -11,6 +11,7 @@ end
 function M.parse_lines(lines, path)
   local cards = {}
   local index = 1
+  local source_version = util.lines_fingerprint(lines)
 
   while index <= #lines do
     local kind = lines[index]:match("^%s*@flashcard%s+([%w_-]+)%s*$")
@@ -22,6 +23,7 @@ function M.parse_lines(lines, path)
         start_line = index,
         end_line = index,
         closed = false,
+        source_version = source_version,
       }
       local last_key = nil
       index = index + 1
@@ -64,10 +66,16 @@ function M.parse_buffer(bufnr)
 end
 
 function M.parse_file(path)
+  local bufnr = util.loaded_buffer(path)
+  if bufnr then
+    return M.parse_buffer(bufnr), {}
+  end
+
   local ok, lines = pcall(vim.fn.readfile, path)
   if not ok then
     return {}, { string.format("%s: could not read file", path) }
   end
+
   return M.parse_lines(lines, path), {}
 end
 
@@ -90,6 +98,26 @@ end
 function M.flashcard_files(config)
   vim.fn.mkdir(config.flashcards_dir, "p")
   local files = vim.fn.globpath(config.flashcards_dir, "**/*.norg", false, true)
+  local seen = {}
+
+  for _, path in ipairs(files) do
+    seen[vim.fs.normalize(path)] = true
+  end
+
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    local path = vim.api.nvim_buf_get_name(bufnr)
+    local normalized = vim.fs.normalize(path)
+    if
+      vim.api.nvim_buf_is_loaded(bufnr)
+      and path:match("%.norg$")
+      and util.path_is_within(path, config.flashcards_dir)
+      and not seen[normalized]
+    then
+      table.insert(files, path)
+      seen[normalized] = true
+    end
+  end
+
   table.sort(files)
   return files
 end

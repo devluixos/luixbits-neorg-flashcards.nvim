@@ -44,3 +44,15 @@ jobs:
 
       - name: Clean config install check
         run: bash scripts/check-clean-install.sh
+
+  nix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Flake checks
+        run: nix flake check --print-build-logs

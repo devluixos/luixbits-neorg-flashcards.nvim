@@ -5,7 +5,8 @@ CONTENTS                                         *neorg-flashcards-contents*
 
 1. Setup                         |neorg-flashcards-setup|
 2. Commands                      |neorg-flashcards-commands|
-3. Card format                   |neorg-flashcards-card-format|
+3. Chapters and collections      |neorg-flashcards-collections|
+4. Card format                   |neorg-flashcards-card-format|
 
 ==============================================================================
 SETUP                                               *neorg-flashcards-setup*
@@ -70,6 +71,21 @@ Review keys:
   p               previous card
   e               edit source card
   q               close review
+
+==============================================================================
+CHAPTERS AND COLLECTIONS                    *neorg-flashcards-collections*
+
+Keep one chapter per `.norg` file under `flashcards_dir`. Open a chapter with
+Neovim, add cards with `:NeorgFlashcardAdd`, and study only that chapter with
+`:NeorgFlashcardReviewFile`. `:NeorgFlashcardReview` recursively combines all
+chapter files under `flashcards_dir`.
+
+Use tags for topics that span chapters. For example, add `tags: grammar` to
+cards in several files and run `:NeorgFlashcardReviewTag grammar`.
+
+`:NeorgFlashcardOpen` opens `default_file`; it is not a file picker. Keep the
+default file under `flashcards_dir` when it should be part of collection
+reviews.
 
 ==============================================================================
 CARD FORMAT                                   *neorg-flashcards-card-format*

@@ -7,6 +7,9 @@ All notable changes to this project will be documented here.
 - Removed the local planning checklist from the tracked public repo.
 - Expanded the README with project goals, quick start, configuration details, and NVF/Nix install examples.
 - Added a real screen-recorded README demo using sample Japanese flashcards.
+- Fixed collection reviews to use unsaved changes from loaded chapter files and guard against stale rating writes.
+- Added source-file context to the review popup and documented file-per-chapter collections.
+- Expanded regression coverage for recursive collections, tags, loaded buffers, and stale sources, and added formatting and Nix CI checks.
 
 ## 0.1.0 - 2026-07-01
 

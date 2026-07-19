@@ -12,22 +12,12 @@ local function field_line(lines, start_line, end_line, field)
   return nil
 end
 
-local function source_buffer(path)
-  local target = vim.fs.normalize(path)
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(bufnr) and vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr)) == target then
-      return bufnr
-    end
-  end
-  return nil
-end
-
 local function source_lines(card)
   if util.isempty(card.path) then
     return nil, nil, "Cannot save rating for an unsaved buffer"
   end
 
-  local bufnr = source_buffer(card.path)
+  local bufnr = util.loaded_buffer(card.path)
   if bufnr then
     return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), bufnr, nil
   end
@@ -108,10 +98,25 @@ local function adjust_cached_lines(cards, updated_card, original_end_line, delta
   end
 end
 
+local function update_source_versions(cards, updated_card, lines)
+  local source_version = util.lines_fingerprint(lines)
+  updated_card.source_version = source_version
+
+  for _, card in ipairs(cards or {}) do
+    if card ~= updated_card and card.path == updated_card.path then
+      card.source_version = source_version
+    end
+  end
+end
+
 function M.set_card_fields(card, updates, opts)
   local lines, bufnr, err = source_lines(card)
   if not lines then
     return false, err, false
+  end
+
+  if card.source_version and card.source_version ~= util.lines_fingerprint(lines) then
+    return false, "Source changed since this review started; restart the review before rating this card.", false
   end
 
   local original_end_line = card.end_line
@@ -137,6 +142,8 @@ function M.set_card_fields(card, updates, opts)
   end
   card.end_line = card.end_line + delta
   adjust_cached_lines(opts and opts.cards, card, original_end_line, delta)
+  local final_lines = bufnr and vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) or lines
+  update_source_versions(opts and opts.cards, card, final_lines)
 
   return true, message, persisted
 end

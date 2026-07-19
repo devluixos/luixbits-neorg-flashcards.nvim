@@ -83,6 +83,7 @@ local function render()
       stats.medium,
       stats.good
     ),
+    "Source: " .. util.path_label(card.path, config.flashcards_dir),
     "",
     "** " .. front_title,
     front_value,

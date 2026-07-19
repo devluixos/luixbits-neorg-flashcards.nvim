@@ -126,6 +126,22 @@
             touch "$out"
           '';
 
+          luaFormat = pkgs.runCommand "luixbits-neorg-flashcards-lua-format" {
+            nativeBuildInputs = [ pkgs.stylua ];
+          } ''
+            cd ${self}
+            stylua --check lua tests
+            touch "$out"
+          '';
+
+          workflowLint = pkgs.runCommand "luixbits-neorg-flashcards-workflow-lint" {
+            nativeBuildInputs = [ pkgs.actionlint ];
+          } ''
+            cd ${self}
+            actionlint .github/workflows/*.yml
+            touch "$out"
+          '';
+
           headlessTests = pkgs.runCommand "luixbits-neorg-flashcards-headless-tests" {
             nativeBuildInputs = [
               pkgs.lua

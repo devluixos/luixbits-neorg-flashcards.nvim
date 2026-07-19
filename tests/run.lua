@@ -15,7 +15,15 @@ end
 
 local function assert_equal(actual, expected, message)
   if actual ~= expected then
-    error(string.format("%s\nexpected: %s\nactual: %s", message or "values differ", vim.inspect(expected), vim.inspect(actual)), 2)
+    error(
+      string.format(
+        "%s\nexpected: %s\nactual: %s",
+        message or "values differ",
+        vim.inspect(expected),
+        vim.inspect(actual)
+      ),
+      2
+    )
   end
 end
 
@@ -84,6 +92,111 @@ local score_filter = schema.score_filter("bad")
 assert_true(score_filter ~= nil, "bad score filter exists")
 assert_true(score_filter.matches({ values = { score = "1" } }), "bad score filter matches score 1")
 assert_true(not score_filter.matches({ values = { score = "2" } }), "bad score filter rejects score 2")
+
+local collection_dir = vim.fn.tempname()
+local nested_dir = collection_dir .. "/course"
+vim.fn.mkdir(nested_dir, "p")
+
+local chapter_one_path = collection_dir .. "/chapter-01.norg"
+local chapter_two_path = nested_dir .. "/chapter-02.norg"
+vim.fn.writefile({
+  "@flashcard japanese",
+  "japanese: 一",
+  "english: one",
+  "tags: numbers chapter-01",
+  "@end",
+}, chapter_one_path)
+vim.fn.writefile({
+  "@flashcard japanese",
+  "japanese: 二",
+  "english: two",
+  "tags: numbers chapter-02",
+  "@end",
+}, chapter_two_path)
+
+local collection_config = {
+  flashcards_dir = collection_dir,
+  languages = presets.only("japanese"),
+}
+local collected_cards, collection_errors = parser.collect_flashcards(collection_config)
+assert_equal(#collection_errors, 0, "recursive collection has no errors")
+assert_equal(#collected_cards, 2, "collection includes cards from nested chapter files")
+assert_equal(collected_cards[1].values.japanese, "一", "root chapter is collected first")
+assert_equal(collected_cards[2].values.japanese, "二", "nested chapter is collected")
+assert_true(schema.card_has_tag(collected_cards[2], "chapter-02"), "chapter tags work across the collection")
+
+local util = require("neorg_flashcards.util")
+assert_equal(
+  util.path_label(chapter_two_path, collection_dir),
+  "course/chapter-02.norg",
+  "collection paths have concise labels"
+)
+
+vim.cmd.edit(vim.fn.fnameescape(chapter_one_path))
+vim.api.nvim_buf_set_lines(0, 0, 0, false, {
+  "@flashcard japanese",
+  "japanese: zero",
+  "english: zero",
+  "tags: numbers chapter-01",
+  "@end",
+  "",
+})
+
+local live_cards, live_errors = parser.collect_flashcards(collection_config)
+assert_equal(#live_errors, 0, "collection accepts unsaved cards in a loaded chapter")
+assert_equal(#live_cards, 3, "collection reads the loaded chapter buffer")
+
+local original_card
+for _, card in ipairs(live_cards) do
+  if card.values.japanese == "一" then
+    original_card = card
+    break
+  end
+end
+assert_true(original_card ~= nil, "original chapter card remains in the live collection")
+
+local live_ok, live_message, live_persisted = store.set_card_fields(original_card, {
+  { field = "score", value = "3" },
+  { field = "reviewed", value = "2026-07-19" },
+}, { cards = live_cards })
+assert_true(live_ok, live_message)
+assert_equal(live_persisted, false, "rating an unsaved chapter remains in its loaded buffer")
+
+local live_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+local zero_line
+local original_line
+local score_line
+for index, line in ipairs(live_lines) do
+  if line == "japanese: zero" then
+    zero_line = index
+  elseif line == "japanese: 一" then
+    original_line = index
+  elseif line == "score: 3" then
+    score_line = index
+  end
+end
+assert_true(zero_line < original_line, "unsaved card remains before the original card")
+assert_true(score_line > original_line, "rating is written to the reviewed card, not the inserted card")
+assert_true(
+  not table.concat(vim.fn.readfile(chapter_one_path), "\n"):find("score: 3", 1, true),
+  "rating is not persisted while the chapter buffer has unsaved edits"
+)
+
+local zero_card
+for _, card in ipairs(live_cards) do
+  if card.values.japanese == "zero" then
+    zero_card = card
+    break
+  end
+end
+assert_true(zero_card ~= nil, "unsaved chapter card is present in the live collection")
+vim.api.nvim_buf_set_lines(0, 0, 0, false, { "* changed after collection" })
+local stale_ok, stale_message = store.set_card_fields(zero_card, {
+  { field = "score", value = "1" },
+}, { cards = live_cards })
+assert_true(not stale_ok, "rating refuses a source changed after collection")
+assert_contains(stale_message, "restart the review", "stale-source error explains the recovery")
+vim.cmd("silent! bwipeout!")
 
 local card_path = vim.fn.tempname() .. ".norg"
 vim.fn.writefile({

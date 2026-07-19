@@ -42,7 +42,7 @@ function M.open()
     footer = " q close ",
     min_width = 56,
     max_width = 72,
-    min_height = 14,
+    min_height = 15,
     max_height = 20,
     height_ratio = 0.36,
     maps = {
@@ -59,7 +59,8 @@ function M.open()
     "Kinds: " .. configured_kinds(),
     "",
     "Make: :NeorgFlashcardOpen, then :NeorgFlashcardAdd [kind]",
-    "Review: :NeorgFlashcardReview or :NeorgFlashcardReviewFile",
+    "Review all: :NeorgFlashcardReview",
+    "Review file: :NeorgFlashcardReviewFile",
     "Filter: :NeorgFlashcardReviewTag tag",
     "Score mode: :NeorgFlashcardReviewScore bad|mid|good|new",
     "",

@@ -25,6 +25,8 @@ All notable changes to this project will be documented here.
   errors and concurrent runs cannot report false success.
 - Added a runnable 90-second Remotion explainer with burned-in captions, a full
   narration and clip plan, a NixOS render helper, and CI composition checks.
+- Matched the explainer to the laptop's native 2880×1800 16:10 panel and added
+  scoped Remotion project instructions to preserve that format.
 
 ## 0.1.0 - 2026-07-01
 

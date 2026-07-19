@@ -1,7 +1,7 @@
 import React from "react";
 import {Composition} from "remotion";
 import {FlashcardsExplainer} from "./FlashcardsExplainer";
-import {FPS, TOTAL_FRAMES} from "./timeline";
+import {FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH, TOTAL_FRAMES} from "./timeline";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -10,8 +10,8 @@ export const RemotionRoot: React.FC = () => {
       component={FlashcardsExplainer}
       durationInFrames={TOTAL_FRAMES}
       fps={FPS}
-      width={1920}
-      height={1080}
+      width={OUTPUT_WIDTH}
+      height={OUTPUT_HEIGHT}
     />
   );
 };

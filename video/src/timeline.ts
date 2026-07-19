@@ -1,4 +1,9 @@
 export const FPS = 30;
+export const OUTPUT_WIDTH = 2880;
+export const OUTPUT_HEIGHT = 1800;
+export const DESIGN_WIDTH = 1920;
+export const DESIGN_HEIGHT = 1200;
+export const DESIGN_SCALE = OUTPUT_WIDTH / DESIGN_WIDTH;
 
 export type SceneId =
   | "hook"

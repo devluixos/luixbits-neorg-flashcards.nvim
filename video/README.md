@@ -43,7 +43,7 @@ MP4 is still written to `video/out/flashcards-explainer.mp4`.
 ## Composition
 
 - ID: `FlashcardsExplainer`
-- Size: 1920×1080
+- Size: 2880×1800 (16:10, matching the laptop's internal panel)
 - Frame rate: 30 fps
 - Duration: 90 seconds
 - Audio: narration script provided separately; no voice recording is committed

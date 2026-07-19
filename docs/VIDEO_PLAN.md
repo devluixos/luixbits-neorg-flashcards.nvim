@@ -15,7 +15,7 @@ Neorg is an optional editing layer, not a runtime dependency.
 ## Format
 
 - Composition: `FlashcardsExplainer`
-- Canvas: 1920×1080
+- Canvas: 2880×1800, 16:10, matching the laptop's internal panel
 - Frame rate: 30 fps
 - Duration: 90 seconds
 - Visual style: dark editor UI, mint and purple accents, monospace technical labels
@@ -92,7 +92,7 @@ Neorg is an optional editing layer, not a runtime dependency.
 ## Optional Real-Neovim Inserts
 
 The Remotion composition is complete without screen recordings. If live proof
-is useful, record three silent 1920×1080 clips and replace or overlay the
+is useful, record three silent 2880×1800 clips and replace or overlay the
 matching conceptual shots:
 
 1. `04-current-file-live.mp4`: open `chapter-02.norg`, then run
@@ -107,7 +107,7 @@ Capture rules:
 - use a clean temporary collection, not personal notes;
 - disable notifications unrelated to the demo;
 - keep the cursor away from the card text after the command runs;
-- record at 30 or 60 fps with no scaling before the Remotion edit;
+- record at 2880×1800 and 30 or 60 fps with no scaling before the Remotion edit;
 - leave one second of handles before and after every action;
 - never type through a password prompt on camera—the shell remembers forever.
 

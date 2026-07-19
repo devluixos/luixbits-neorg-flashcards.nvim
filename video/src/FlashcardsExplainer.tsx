@@ -8,7 +8,15 @@ import {
   useVideoConfig,
 } from "remotion";
 import {fonts, theme} from "./theme";
-import {SCENES, SceneId, sceneDuration, sceneStart} from "./timeline";
+import {
+  DESIGN_HEIGHT,
+  DESIGN_SCALE,
+  DESIGN_WIDTH,
+  SCENES,
+  SceneId,
+  sceneDuration,
+  sceneStart,
+} from "./timeline";
 
 const sceneById = (id: SceneId) => {
   const scene = SCENES.find((candidate) => candidate.id === id);
@@ -672,14 +680,24 @@ const scenes: Record<SceneId, React.FC> = {
 
 export const FlashcardsExplainer: React.FC = () => (
   <AbsoluteFill style={{backgroundColor: theme.bg, overflow: "hidden"}}>
-    <Background />
-    {SCENES.map((scene) => {
-      const Component = scenes[scene.id];
-      return (
-        <Sequence key={scene.id} from={sceneStart(scene.id)} durationInFrames={sceneDuration(scene.id)}>
-          <Component />
-        </Sequence>
-      );
-    })}
+    <div
+      style={{
+        position: "relative",
+        width: DESIGN_WIDTH,
+        height: DESIGN_HEIGHT,
+        transform: `scale(${DESIGN_SCALE})`,
+        transformOrigin: "top left",
+      }}
+    >
+      <Background />
+      {SCENES.map((scene) => {
+        const Component = scenes[scene.id];
+        return (
+          <Sequence key={scene.id} from={sceneStart(scene.id)} durationInFrames={sceneDuration(scene.id)}>
+            <Component />
+          </Sequence>
+        );
+      })}
+    </div>
   </AbsoluteFill>
 );

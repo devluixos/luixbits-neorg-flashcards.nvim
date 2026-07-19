@@ -28,22 +28,39 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install lua neovim
 
-      - name: Lua syntax
-        run: |
-          if command -v luac5.4 >/dev/null 2>&1; then
-            luac_bin=luac5.4
-          else
-            luac_bin=luac
-          fi
-
-          find lua -name '*.lua' -print0 | xargs -0 "$luac_bin" -p
-          find scripts -maxdepth 1 -name '*.lua' -print0 | xargs -0 -r "$luac_bin" -p
-
       - name: Headless Neovim tests
-        run: nvim --headless -u NONE -i NONE -n --cmd "set rtp^=${{ github.workspace }}" -c "luafile tests/run.lua" -c "qa!"
+        run: |
+          nvim --version | sed -n '1,3p'
+          bash scripts/test.sh
 
       - name: Clean config install check
         run: bash scripts/check-clean-install.sh
+
+  minimum-neovim:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4
+
+      - name: Install Neovim 0.10.4
+        run: |
+          archive="$RUNNER_TEMP/nvim-linux-x86_64.tar.gz"
+          curl -L https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz -o "$archive"
+          echo "95aaa8e89473f5421114f2787c13ae0ec6e11ebbd1a13a1bd6fcf63420f8073f  $archive" | sha256sum -c -
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
+
+      - name: Compatibility tests
+        env:
+          NVIM: ${{ runner.temp }}/nvim-linux-x86_64/bin/nvim
+        run: |
+          "$NVIM" --version | sed -n '1,3p'
+          bash scripts/test.sh
+          bash scripts/check-clean-install.sh
 
   nix:
     runs-on: ubuntu-latest

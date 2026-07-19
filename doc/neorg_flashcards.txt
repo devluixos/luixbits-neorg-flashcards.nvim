@@ -5,8 +5,9 @@ CONTENTS                                         *neorg-flashcards-contents*
 
 1. Setup                         |neorg-flashcards-setup|
 2. Commands                      |neorg-flashcards-commands|
-3. Chapters and collections      |neorg-flashcards-collections|
-4. Card format                   |neorg-flashcards-card-format|
+3. Keymaps                       |neorg-flashcards-keymaps|
+4. Chapters and collections      |neorg-flashcards-collections|
+5. Card format                   |neorg-flashcards-card-format|
 
 ==============================================================================
 SETUP                                               *neorg-flashcards-setup*
@@ -26,16 +27,23 @@ language:
 
 Use `presets.only("chinese")` for Chinese, or pass a custom `languages` table.
 
+Neorg is optional. Card storage and collection scans always use `.norg` files,
+but the plugin reads those files directly. Without Neorg they are ordinary
+plain-text buffers. Files ending in `.md` or `.txt` are not collected.
+
 ==============================================================================
 COMMANDS                                         *neorg-flashcards-commands*
 
                                                         *:NeorgFlashcardOpen*
 :NeorgFlashcardOpen
-        Open the configured default flashcard file.
+        Create or open the configured default flashcard file. Missing parent
+        directories are created.
 
                                                          *:NeorgFlashcardAdd*
 :NeorgFlashcardAdd [kind]
-        Prompt for a new card. Uses `default_kind` when [kind] is omitted.
+        Prompt for a new card. Adds to the current `.norg` file, or opens
+        `default_file` from any other buffer. Uses `default_kind` when [kind]
+        is omitted.
 
                                                       *:NeorgFlashcardReview*
 :NeorgFlashcardReview
@@ -60,6 +68,22 @@ COMMANDS                                         *neorg-flashcards-commands*
                                                         *:NeorgFlashcardHelp*
 :NeorgFlashcardHelp
         Open the short in-editor guide.
+
+==============================================================================
+KEYMAPS                                         *neorg-flashcards-keymaps*
+
+The plugin defines commands but no global keymaps. Review keys are local to
+the review popup. Example global mappings:
+>
+  vim.keymap.set("n", "<leader>nci", "<cmd>NeorgFlashcardAdd<CR>",
+    { desc = "Add flashcard" })
+  vim.keymap.set("n", "<leader>ncr", "<cmd>NeorgFlashcardReview<CR>",
+    { desc = "Review all flashcards" })
+  vim.keymap.set("n", "<leader>ncf", "<cmd>NeorgFlashcardReviewFile<CR>",
+    { desc = "Review current flashcard file" })
+  vim.keymap.set("n", "<leader>nct", "<cmd>NeorgFlashcardReviewTag<CR>",
+    { desc = "Review flashcards by tag" })
+<
 
 Review keys:
 

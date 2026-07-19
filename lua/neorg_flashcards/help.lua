@@ -42,7 +42,7 @@ function M.open()
     footer = " q close ",
     min_width = 56,
     max_width = 72,
-    min_height = 15,
+    min_height = 16,
     max_height = 20,
     height_ratio = 0.36,
     maps = {
@@ -55,6 +55,7 @@ function M.open()
     "* Flashcards",
     "",
     "Folder: " .. (config.flashcards_dir or ""),
+    "Files: .norg (Neorg itself is optional)",
     "Default kind: " .. default_kind(),
     "Kinds: " .. configured_kinds(),
     "",

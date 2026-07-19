@@ -33,14 +33,64 @@ local function assert_contains(value, pattern, message)
   end
 end
 
+local function current_popup()
+  local bufnr = vim.api.nvim_get_current_buf()
+  assert_equal(vim.bo[bufnr].buftype, "nofile", "plugin opens a nofile popup")
+  assert_equal(vim.bo[bufnr].filetype, "norg", "plugin popup uses the norg filetype")
+  return bufnr, table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
+end
+
+local function assert_buffer_maps(bufnr, expected)
+  local maps = {}
+  for _, map in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
+    maps[map.lhs] = true
+  end
+
+  for _, lhs in ipairs(expected) do
+    assert_true(maps[lhs], "missing popup-local mapping: " .. lhs)
+  end
+end
+
+local test_root = vim.fn.tempname()
 local config = {
-  flashcards_dir = vim.fn.tempname(),
-  default_file = vim.fn.tempname() .. ".norg",
+  flashcards_dir = test_root .. "/flashcards",
+  default_file = test_root .. "/flashcards/inbox/cards.norg",
   default_kind = "japanese",
   languages = presets.only("japanese", "chinese"),
 }
 
 flashcards.setup(config)
+
+for _, command in ipairs({
+  "NeorgFlashcardOpen",
+  "NeorgFlashcardAdd",
+  "NeorgFlashcardHelp",
+  "NeorgFlashcardReview",
+  "NeorgFlashcardReviewFile",
+  "NeorgFlashcardReviewTag",
+  "NeorgFlashcardReviewScore",
+  "NeorgFlashcardValidate",
+}) do
+  assert_equal(vim.fn.exists(":" .. command), 2, command .. " is registered")
+end
+assert_equal(vim.fn.maparg("<leader>ncr", "n"), "", "setup does not create global keymaps")
+
+vim.cmd("NeorgFlashcardHelp")
+local help_popup, help_text = current_popup()
+assert_contains(help_text, "Files: .norg (Neorg itself is optional)", "help explains the file and Neorg relationship")
+assert_buffer_maps(help_popup, { "q" })
+require("neorg_flashcards.help").close()
+assert_true(not vim.api.nvim_buf_is_valid(help_popup), "closing help wipes its scratch buffer")
+
+vim.cmd("NeorgFlashcardOpen")
+assert_equal(vim.api.nvim_buf_get_name(0), config.default_file, "open command selects the configured default file")
+assert_equal(vim.fn.filereadable(config.default_file), 1, "open command creates nested default-file directories")
+assert_contains(
+  table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"),
+  "* Flashcards",
+  "new default file has a heading"
+)
+vim.cmd("silent! bwipeout!")
 
 local japanese_lines = {
   "@flashcard japanese",
@@ -93,7 +143,7 @@ assert_true(score_filter ~= nil, "bad score filter exists")
 assert_true(score_filter.matches({ values = { score = "1" } }), "bad score filter matches score 1")
 assert_true(not score_filter.matches({ values = { score = "2" } }), "bad score filter rejects score 2")
 
-local collection_dir = vim.fn.tempname()
+local collection_dir = config.flashcards_dir
 local nested_dir = collection_dir .. "/course"
 vim.fn.mkdir(nested_dir, "p")
 
@@ -132,7 +182,32 @@ assert_equal(
   "collection paths have concise labels"
 )
 
+vim.cmd("NeorgFlashcardReviewTag chapter-02")
+local tag_popup, tag_text = current_popup()
+assert_contains(tag_text, "tag:chapter-02 | 1/1", "tag command scopes the review")
+assert_contains(tag_text, "Source: course/chapter-02.norg", "tag review shows its chapter source")
+assert_contains(tag_text, "二", "tag review renders the matching card")
+assert_buffer_maps(tag_popup, { "q", "e", "n", "p", "1", "2", "3" })
+flashcards.close_review()
+assert_true(not vim.api.nvim_buf_is_valid(tag_popup), "closing review wipes its scratch buffer")
+
+vim.cmd("NeorgFlashcardReviewScore new")
+local _, score_text = current_popup()
+assert_contains(score_text, "score:new | 1/2", "score command reviews both unrated chapter cards")
+flashcards.close_review()
+
+vim.cmd("NeorgFlashcardReview")
+local _, all_text = current_popup()
+assert_contains(all_text, "all | 1/2", "all command combines chapter files")
+flashcards.close_review()
+
 vim.cmd.edit(vim.fn.fnameescape(chapter_one_path))
+vim.cmd("NeorgFlashcardReviewFile")
+local _, file_text = current_popup()
+assert_contains(file_text, "file | 1/1", "file command reviews only the current chapter")
+assert_contains(file_text, "Source: chapter-01.norg", "file review shows its chapter source")
+flashcards.close_review()
+
 vim.api.nvim_buf_set_lines(0, 0, 0, false, {
   "@flashcard japanese",
   "japanese: zero",
@@ -291,4 +366,5 @@ assert_contains(modified_buffer_text, "score: 1", "score is applied to the modif
 assert_true(not modified_disk_text:find("score: 1", 1, true), "score is not written to disk while buffer is modified")
 vim.cmd("silent! bwipeout!")
 
+vim.g.neorg_flashcards_tests_passed = true
 print("neorg_flashcards tests passed")

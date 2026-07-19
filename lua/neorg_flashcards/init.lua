@@ -21,6 +21,10 @@ local function ensure_flashcards_dir()
   vim.fn.mkdir(config.flashcards_dir, "p")
 end
 
+local function ensure_default_file_dir()
+  vim.fn.mkdir(vim.fn.fnamemodify(config.default_file, ":h"), "p")
+end
+
 local function current_buffer_is_norg()
   local path = vim.api.nvim_buf_get_name(0)
   return path ~= "" and path:match("%.norg$")
@@ -95,6 +99,7 @@ end
 
 function M.open_flashcards()
   ensure_flashcards_dir()
+  ensure_default_file_dir()
   local existed = vim.fn.filereadable(config.default_file) == 1
   vim.cmd.edit(util.fname(config.default_file))
 

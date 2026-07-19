@@ -13,6 +13,7 @@ sync account, and no database outside your notes.
 
 - [Features](#features)
 - [Requirements](#requirements)
+- [Neorg or Plain Neovim?](#neorg-or-plain-neovim)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Chapters and Collections](#chapters-and-collections)
@@ -41,14 +42,44 @@ sync account, and no database outside your notes.
 ## Requirements
 
 - Neovim 0.10 or newer.
-- Neorg, if you want normal Neorg editing/rendering for the `.norg` files.
+- Read/write access to the directory that will contain your cards.
 
-The plugin itself reads and writes plain files. It does not require a running
-Neorg workspace, Anki, SQLite, or external services.
+Neorg is optional. The plugin reads and writes the card blocks itself; it does
+not require a Neorg workspace, Anki, SQLite, a server, or an account.
+
+## Neorg or Plain Neovim?
+
+The files must use the `.norg` extension in both modes. Neorg is the editing
+experience around those files, not the storage engine for this plugin.
+
+| Capability | Plain Neovim | Neovim with Neorg |
+| --- | --- | --- |
+| Add, review, filter, and rate cards | Yes | Yes |
+| `.norg` files required | Yes | Yes |
+| Neorg syntax, concealing, and note features | No | Yes |
+| Neorg workspace required | No | No |
+
+Without Neorg, a card file is ordinary text with a `.norg` name. The suffix is
+the protocol here; no note-taking mothership has to be docked. Files ending in
+`.md` or `.txt` are not discovered by collection reviews.
 
 ## Installation
 
-### lazy.nvim
+### lazy.nvim with Neorg
+
+Configure Neorg as its own plugin spec. This follows Neorg's stable lazy.nvim
+setup; customize its modules separately if you want more than the defaults:
+
+```lua
+{
+  "nvim-neorg/neorg",
+  lazy = false,
+  version = "*",
+  config = true,
+}
+```
+
+Then add the flashcard plugin:
 
 ```lua
 {
@@ -69,7 +100,37 @@ Neorg workspace, Anki, SQLite, or external services.
 }
 ```
 
+Neorg handles editing and rendering; `neorg_flashcards` handles card parsing,
+review state, and rating writeback. Run `:checkhealth neorg` if Neorg itself is
+unhappy.
+
+### lazy.nvim without Neorg
+
+Omit the dependency when you only want the flashcard workflow:
+
+```lua
+{
+  "LuixBits/luixbits-neorg-flashcards.nvim",
+  config = function()
+    local presets = require("neorg_flashcards.presets")
+
+    require("neorg_flashcards").setup({
+      flashcards_dir = vim.fn.expand("~/notes/flashcards"),
+      default_file = vim.fn.expand("~/notes/flashcards/cards.norg"),
+      default_kind = "japanese",
+      languages = presets.only("japanese"),
+    })
+  end,
+}
+```
+
+The source file will be plain text, while the review and help windows still
+work normally.
+
 ### Local Checkout
+
+Use the same setup while developing from a local directory. Add Neorg as a
+dependency only if your normal Neovim configuration uses it:
 
 ```lua
 {
@@ -123,7 +184,8 @@ Import the module next to your NVF/Home Manager setup:
 ```
 
 The module adds the plugin package to NVF, emits the Lua `setup` call, and only
-creates keymaps when `keymaps.enable = true`.
+creates keymaps when `keymaps.enable = true`. It does not install or configure
+Neorg; enable Neorg separately in NVF if you want its editing features.
 
 If you do not want to import the module, use the package directly:
 
@@ -158,11 +220,15 @@ in {
 
 ## Quick Start
 
-1. Configure at least one language preset or custom schema.
-2. Run `:NeorgFlashcardOpen` to create or open the configured flashcard file.
-3. Run `:NeorgFlashcardAdd` to add a card.
-4. Run `:NeorgFlashcardReview` to study all cards.
-5. During review, press `1`, `2`, or `3` to save how well you know the card.
+1. Choose the Neorg or plain-Neovim installation.
+2. Configure `flashcards_dir`, `default_file`, and at least one language.
+3. Run `:NeorgFlashcardOpen` to create or open the default card file.
+4. Run `:NeorgFlashcardAdd` to add a card.
+5. Run `:NeorgFlashcardReview` to study all cards.
+6. Press `1`, `2`, or `3` during review to save how well you know the card.
+
+`default_file` may be nested; its parent directories are created when it is
+opened. Keeping it under `flashcards_dir` makes it part of collection reviews.
 
 ## Chapters and Collections
 
@@ -192,8 +258,10 @@ comma-separated tag at a time.
 
 ## Commands
 
-- `:NeorgFlashcardOpen` opens the configured default file.
-- `:NeorgFlashcardAdd [kind]` prompts for a new card. Without `[kind]`, it uses `default_kind`.
+- `:NeorgFlashcardOpen` creates or opens `default_file`.
+- `:NeorgFlashcardAdd [kind]` adds to the current `.norg` file. From another
+  buffer, it opens `default_file` first. Without `[kind]`, it uses
+  `default_kind`.
 - `:NeorgFlashcardHelp` opens a short in-editor guide.
 - `:NeorgFlashcardReview` reviews all valid cards under `flashcards_dir`.
 - `:NeorgFlashcardReviewFile` reviews valid cards in the current file.
@@ -206,6 +274,9 @@ Compatibility aliases `:NeorgFlashcardAddJapanese` and
 configured.
 
 ## Review Keys
+
+These mappings exist only inside the review popup; they do not occupy global
+normal-mode keys.
 
 - `Space` / `Enter`: reveal the answer, then advance.
 - `1`: save `score: 1` and advance.
@@ -255,6 +326,17 @@ require("neorg_flashcards").setup({
   languages = {},
 })
 ```
+
+| Option | Meaning |
+| --- | --- |
+| `flashcards_dir` | Root recursively scanned by all-card, tag, and score reviews. |
+| `default_file` | File opened by `NeorgFlashcardOpen` and used when adding outside a `.norg` buffer. |
+| `default_kind` | Schema used by `NeorgFlashcardAdd` when no kind argument is given. |
+| `languages` | Map of supported card kinds to their schemas. At least one is required for useful cards. |
+
+Set `flashcards_dir` and `default_file` together. Changing the directory does
+not silently rewrite the independently configured default file—configuration
+telepathy remains out of scope.
 
 `languages` maps a flashcard kind, such as `japanese`, to a schema:
 
@@ -335,6 +417,11 @@ require("neorg_flashcards").setup({
 
 ## Suggested Keymaps
 
+The plugin creates commands but no global keymaps. The NVF module is the one
+exception when its opt-in `keymaps.enable` setting is true. For normal Lua
+configuration, these mappings use `<leader>nc` as a mnemonic namespace and
+provide descriptions for which-key-style helpers:
+
 ```lua
 vim.keymap.set("n", "<leader>nco", "<cmd>NeorgFlashcardOpen<CR>", { desc = "Open flashcards" })
 vim.keymap.set("n", "<leader>nci", "<cmd>NeorgFlashcardAdd<CR>", { desc = "Add flashcard" })
@@ -345,6 +432,8 @@ vim.keymap.set("n", "<leader>nct", "<cmd>NeorgFlashcardReviewTag<CR>", { desc = 
 vim.keymap.set("n", "<leader>ncs", "<cmd>NeorgFlashcardReviewScore<CR>", { desc = "Review flashcards by score" })
 vim.keymap.set("n", "<leader>ncv", "<cmd>NeorgFlashcardValidate<CR>", { desc = "Validate flashcards" })
 ```
+
+Change the prefix freely. Your leader key is sovereign territory.
 
 ## Development
 
@@ -360,7 +449,24 @@ Check the plugin from an isolated Neovim config:
 bash scripts/check-clean-install.sh
 ```
 
-If `stylua` is installed, the test script also checks formatting.
+The clean-install check intentionally runs without Neorg. CI also runs the same
+suite on the declared minimum Neovim version, 0.10.4.
+
+Test another Neovim binary explicitly:
+
+```sh
+NVIM=/path/to/nvim bash scripts/test.sh
+NVIM=/path/to/nvim bash scripts/check-clean-install.sh
+```
+
+Run every Nix package, module, formatting, workflow, headless, and isolated
+Neorg-integration check:
+
+```sh
+nix flake check --print-build-logs
+```
+
+If `stylua` is installed, `scripts/test.sh` also checks formatting.
 
 Record the README demo from your real desktop session:
 

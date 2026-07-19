@@ -52,13 +52,16 @@
           plugin = self.packages.${system}.luixbits-neorg-flashcards-nvim;
 
           nvimEnv = ''
-            export HOME="$TMPDIR/home"
             export XDG_CONFIG_HOME="$TMPDIR/config"
             export XDG_STATE_HOME="$TMPDIR/state"
             export XDG_CACHE_HOME="$TMPDIR/cache"
             export XDG_DATA_HOME="$TMPDIR/data"
-            mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_DATA_HOME"
+            mkdir -p "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_DATA_HOME"
           '';
+
+          neorgNvim = pkgs.wrapNeovimUnstable pkgs.neovim-unwrapped {
+            plugins = [ pkgs.vimPlugins.neorg ];
+          };
 
           nvfModuleEval =
             let
@@ -122,7 +125,7 @@
             cd ${self}
             while IFS= read -r -d "" file; do
               luac -p "$file"
-            done < <(find lua scripts -name '*.lua' -print0)
+            done < <(find lua scripts tests -name '*.lua' -print0)
             touch "$out"
           '';
 
@@ -142,6 +145,14 @@
             touch "$out"
           '';
 
+          documentationLint = pkgs.runCommand "luixbits-neorg-flashcards-documentation-lint" {
+            nativeBuildInputs = [ pkgs.markdownlint-cli ];
+          } ''
+            cd ${self}
+            markdownlint ./*.md
+            touch "$out"
+          '';
+
           headlessTests = pkgs.runCommand "luixbits-neorg-flashcards-headless-tests" {
             nativeBuildInputs = [
               pkgs.lua
@@ -153,6 +164,19 @@
             nvim --headless -u NONE -i NONE -n \
               --cmd "set rtp^=${self}" \
               -c "luafile ${self}/tests/run.lua" \
+              -c "if !get(g:, 'neorg_flashcards_tests_passed', v:false) | cquit 1 | endif" \
+              -c "qa!"
+            touch "$out"
+          '';
+
+          neorgIntegration = pkgs.runCommand "luixbits-neorg-flashcards-neorg-integration" {
+            nativeBuildInputs = [ neorgNvim ];
+          } ''
+            ${nvimEnv}
+            nvim --headless -i NONE -n \
+              --cmd "set rtp^=${self}" \
+              -c "luafile ${self}/tests/neorg.lua" \
+              -c "if !get(g:, 'neorg_flashcards_neorg_tests_passed', v:false) | cquit 1 | endif" \
               -c "qa!"
             touch "$out"
           '';

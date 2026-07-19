@@ -26,7 +26,8 @@ local function normalized_path(path)
     return ""
   end
 
-  return vim.fs.normalize(path)
+  local normalized = vim.fs.normalize(path)
+  return vim.fs.normalize(vim.fn.resolve(normalized))
 end
 
 local function without_trailing_slash(path)

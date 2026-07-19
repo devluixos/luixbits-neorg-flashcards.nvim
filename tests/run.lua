@@ -189,6 +189,14 @@ assert_equal(
   "course/chapter-02.norg",
   "collection paths have concise labels"
 )
+local collection_alias = test_root .. "/flashcards-alias"
+local linked, link_error = vim.uv.fs_symlink(collection_dir, collection_alias, { dir = true })
+assert_true(linked, "test setup creates a collection symlink: " .. tostring(link_error))
+assert_equal(
+  util.path_label(chapter_two_path, collection_alias),
+  "course/chapter-02.norg",
+  "collection labels resolve symlinked roots"
+)
 
 vim.cmd("NeorgFlashcardReviewTag chapter-02")
 local tag_popup, tag_text = current_popup()
